@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabuada Rush</title>
+
+<style>
+body{
+font-family: Arial, sans-serif;
+background:#0F172A;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+.container{
+text-align:center;
+background:#1E293B;
+padding:30px;
+border-radius:15px;
+width:320px;
+}
+
+h1{
+color:#3B82F6;
+}
+
+#question{
+font-size:40px;
+margin:20px 0;
+}
+
+input{
+font-size:20px;
+padding:10px;
+width:100px;
+text-align:center;
+border-radius:8px;
+border:none;
+}
+
+button{
+margin-top:15px;
+padding:10px 20px;
+font-size:18px;
+background:#3B82F6;
+border:none;
+border-radius:8px;
+color:white;
+cursor:pointer;
+}
+
+#timer{
+font-size:22px;
+margin-bottom:10px;
+}
+
+.correct{
+color:#22C55E;
+}
+
+.wrong{
+color:#EF4444;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>Tabuada Rush</h1>
+
+<div id="timer">Tempo: 300</div>
+
+<div id="question"></div>
+
+<input type="number" id="answer">
+<br>
+<button onclick="checkAnswer()">Confirmar</button>
+
+<p id="result"></p>
+
+</div>
+
+<script>
+
+let time = 300;
+let num1, num2;
+let correctAnswer;
+
+function newQuestion(){
+num1 = Math.floor(Math.random()*9)+2;
+num2 = Math.floor(Math.random()*10)+1;
+correctAnswer = num1*num2;
+document.getElementById("question").innerText =
+num1 + " × " + num2;
+}
+
+function checkAnswer(){
+let userAnswer =
+Number(document.getElementById("answer").value);
+
+if(userAnswer === correctAnswer){
+document.getElementById("result").innerText="Acertou!";
+document.getElementById("result").className="correct";
+time +=1;
+}else{
+document.getElementById("result").innerText=
+"Errado! Resposta: "+correctAnswer;
+document.getElementById("result").className="wrong";
+}
+
+document.getElementById("answer").value="";
+newQuestion();
+}
+
+setInterval(()=>{
+time--;
+document.getElementById("timer").innerText=
+"Tempo: "+time;
+
+if(time<=0){
+alert("Tempo acabou!");
+location.reload();
+}
+},1000);
+
+newQuestion();
+
+</script>
+
+</body>
+</html>
