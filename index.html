@@ -6,69 +6,125 @@
 <title>Tabuada Rush</title>
 
 <style>
+
+/* =====================
+   TEMA VISUAL
+===================== */
+
+:root{
+  --blue:#3B82F6;
+  --dark:#0F172A;
+  --card:#1E293B;
+  --white:#ffffff;
+}
+
 body{
-font-family: Arial;
-background:#0F172A;
-color:white;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-margin:0;
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:var(--dark);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
 }
 
 .container{
-background:#1E293B;
-padding:30px;
-border-radius:15px;
-text-align:center;
-width:340px;
+  width:95%;
+  max-width:420px;
+  background:var(--card);
+  padding:20px;
+  border-radius:18px;
+  text-align:center;
+  box-shadow:0 0 20px rgba(0,0,0,.4);
+  transition:.3s;
 }
 
-h1{color:#3B82F6;}
-
-#question{
-font-size:42px;
-margin:15px;
-}
-
-input{
-font-size:22px;
-padding:8px;
-width:120px;
-text-align:center;
-border-radius:8px;
-border:none;
+h1{
+  margin:10px 0;
 }
 
 button{
-margin-top:10px;
-padding:10px 20px;
-font-size:18px;
-background:#3B82F6;
-color:white;
-border:none;
-border-radius:8px;
-cursor:pointer;
+  background:var(--blue);
+  border:none;
+  padding:14px;
+  border-radius:12px;
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+  width:100%;
+  margin-top:10px;
+  transition:.2s;
 }
 
-.bar{
-height:12px;
-background:#334155;
-border-radius:10px;
-margin:10px 0;
-overflow:hidden;
+button:hover{
+  transform:scale(1.03);
 }
 
-.fill{
-height:100%;
-background:#8B5CF6;
-width:0%;
-transition:0.3s;
+input{
+  width:120px;
+  font-size:26px;
+  text-align:center;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  margin:15px 0;
 }
 
-.correct{color:#22C55E;}
-.wrong{color:#EF4444;}
+.hidden{
+  display:none;
+}
+
+.xp-bar{
+  width:100%;
+  height:14px;
+  background:#111;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.xp-fill{
+  height:100%;
+  background:var(--blue);
+  width:0%;
+  transition:.3s;
+}
+
+.big{
+  font-size:42px;
+  margin:15px 0;
+}
+
+.feedback{
+  height:20px;
+  margin-top:5px;
+}
+
+.nav{
+  margin-top:15px;
+  font-size:14px;
+  opacity:.8;
+  cursor:pointer;
+}
+
+.success{
+  animation:flash .25s;
+}
+
+@keyframes flash{
+  0%{background:#16a34a;}
+  100%{background:var(--card);}
+}
+
+.levelUp{
+  animation:level .4s;
+}
+
+@keyframes level{
+  0%{transform:scale(1.1);}
+  100%{transform:scale(1);}
+}
+
 </style>
 </head>
 
@@ -76,95 +132,226 @@ transition:0.3s;
 
 <div class="container">
 
-<h1>Tabuada Rush</h1>
+<!-- HOME -->
+<div id="home">
 
-<div>⏱ Tempo: <span id="timer">300</span></div>
-<div>⭐ Nível: <span id="level">1</span></div>
-<div>XP: <span id="xp">0</span>/100</div>
+<h1>🔥 Tabuada Rush</h1>
 
-<div class="bar"><div class="fill" id="xpBar"></div></div>
+<p>Nível: <span id="level">1</span></p>
 
-<div id="question"></div>
+<div class="xp-bar">
+<div class="xp-fill" id="xpBar"></div>
+</div>
 
-<input type="number" id="answer">
-<br>
-<button onclick="check()">Confirmar</button>
+<button onclick="startGame()">▶ COMEÇAR AGORA</button>
 
-<p id="result"></p>
+<div class="nav" onclick="openStudy()">📖 Modo Aprender</div>
+
+</div>
+
+<!-- GAME -->
+<div id="game" class="hidden">
+
+<div>
+⏱️ <span id="time">300</span>s |
+🔥 Combo x<span id="combo">1</span>
+</div>
+
+<div class="big" id="question">2 x 2</div>
+
+<input id="answer" type="number" placeholder="?">
+
+<button onclick="checkAnswer()">✅ Confirmar</button>
+
+<div class="feedback" id="feedback"></div>
+
+</div>
+
+<!-- STUDY -->
+<div id="study" class="hidden">
+
+<h2>📖 Aprender Tabuada</h2>
+
+<p>
+✅ Estude do 2 ao 10 diariamente.<br>
+✅ Repita em voz alta.<br>
+✅ Procure padrões (5 termina em 0 ou 5).<br>
+✅ Pratique 5 minutos por dia.
+</p>
+
+<button onclick="goHome()">⬅ Voltar</button>
+
+</div>
 
 </div>
 
 <script>
 
+/* ======================
+   DADOS SALVOS
+====================== */
+
+let xp = localStorage.getItem("xp") || 0;
+let level = localStorage.getItem("level") || 1;
+
+xp = Number(xp);
+level = Number(level);
+
+updateUI();
+
+/* ======================
+   VARIÁVEIS DO JOGO
+====================== */
+
+let a,b,correct;
 let time = 300;
-let xp = Number(localStorage.getItem("xp")) || 0;
-let level = Number(localStorage.getItem("level")) || 1;
+let timer;
 let combo = 0;
 
-let n1,n2,correct;
+/* ======================
+   NAVEGAÇÃO
+====================== */
+
+function startGame(){
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("game").classList.remove("hidden");
+
+  time=300;
+  combo=0;
+
+  nextQuestion();
+
+  timer=setInterval(()=>{
+    time--;
+    document.getElementById("time").innerText=time;
+
+    if(time<=0){
+      endGame();
+    }
+  },1000);
+}
+
+function goHome(){
+  document.getElementById("study").classList.add("hidden");
+  document.getElementById("home").classList.remove("hidden");
+}
+
+function openStudy(){
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("study").classList.remove("hidden");
+}
+
+/* ======================
+   PERGUNTAS
+====================== */
+
+function nextQuestion(){
+  a = Math.floor(Math.random()*9)+2;
+  b = Math.floor(Math.random()*10)+1;
+
+  correct = a*b;
+
+  document.getElementById("question").innerText =
+    `${a} x ${b}`;
+
+  document.getElementById("answer").value="";
+  document.getElementById("answer").focus();
+}
+
+/* ======================
+   RESPOSTA
+====================== */
+
+function checkAnswer(){
+
+  let user = Number(document.getElementById("answer").value);
+  let feedback = document.getElementById("feedback");
+
+  if(user===correct){
+
+    combo++;
+    time++;
+
+    let multiplier = 1;
+    if(combo>=5) multiplier=3;
+    else if(combo>=3) multiplier=2;
+
+    gainXP(10*multiplier);
+
+    feedback.innerText="✅ Boa!";
+    document.querySelector(".container").classList.add("success");
+
+    setTimeout(()=>{
+      document.querySelector(".container").classList.remove("success");
+    },200);
+
+  }else{
+    combo=0;
+    feedback.innerText=`❌ Era ${correct}`;
+  }
+
+  document.getElementById("combo").innerText=getComboMult();
+
+  nextQuestion();
+}
+
+function getComboMult(){
+  if(combo>=5) return 3;
+  if(combo>=3) return 2;
+  return 1;
+}
+
+/* ======================
+   XP E NÍVEL
+====================== */
+
+function gainXP(amount){
+
+  xp+=amount;
+
+  let need = level*100;
+
+  if(xp>=need){
+    xp-=need;
+    level++;
+
+    document.querySelector(".container")
+      .classList.add("levelUp");
+
+    setTimeout(()=>{
+      document.querySelector(".container")
+      .classList.remove("levelUp");
+    },400);
+  }
+
+  saveProgress();
+  updateUI();
+}
 
 function updateUI(){
-document.getElementById("xp").innerText=xp;
-document.getElementById("level").innerText=level;
-document.getElementById("xpBar").style.width=(xp%100)+"%";
+  document.getElementById("level").innerText=level;
+
+  let need = level*100;
+  let percent = (xp/need)*100;
+
+  document.getElementById("xpBar").style.width =
+    percent+"%";
 }
 
-function newQuestion(){
-n1=Math.floor(Math.random()*9)+2;
-n2=Math.floor(Math.random()*10)+1;
-correct=n1*n2;
-document.getElementById("question").innerText=n1+" × "+n2;
+function saveProgress(){
+  localStorage.setItem("xp",xp);
+  localStorage.setItem("level",level);
 }
 
-function check(){
+/* ======================
+   FINAL
+====================== */
 
-let value=Number(document.getElementById("answer").value);
-
-if(value===correct){
-
-combo++;
-let gain=10*combo;
-
-xp+=gain;
-time+=1;
-
-document.getElementById("result").innerText=
-`Acertou! +${gain} XP (Combo x${combo})`;
-document.getElementById("result").className="correct";
-
-if(xp>=level*100){
-level++;
-document.body.style.background="#1e3a8a";
-setTimeout(()=>document.body.style.background="#0F172A",200);
+function endGame(){
+  clearInterval(timer);
+  alert("Tempo acabou! Continue treinando 🚀");
+  location.reload();
 }
-
-}else{
-combo=0;
-document.getElementById("result").innerText=
-`Errado! Era ${correct}`;
-document.getElementById("result").className="wrong";
-}
-
-localStorage.setItem("xp",xp);
-localStorage.setItem("level",level);
-
-document.getElementById("answer").value="";
-updateUI();
-newQuestion();
-}
-
-setInterval(()=>{
-time--;
-document.getElementById("timer").innerText=time;
-
-if(time<=0){
-alert("Fim de jogo!");
-location.reload();
-}
-},1000);
-
-updateUI();
-newQuestion();
 
 </script>
 
